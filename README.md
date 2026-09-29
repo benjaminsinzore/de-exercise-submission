@@ -37,6 +37,8 @@ assume the virtual environment is active.
 
 ```bash
 pip install -r requirements.txt  # dbt Core with DuckDB
+
+dbt deps
 ```
 
 ##
