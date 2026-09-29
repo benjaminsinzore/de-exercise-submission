@@ -1,0 +1,11 @@
+
+    
+    
+
+
+
+select enterprise_client_id
+from "ingestion"."main_marts"."fct_loan"
+where enterprise_client_id is null
+
+

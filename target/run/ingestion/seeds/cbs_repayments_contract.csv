@@ -1,0 +1,11 @@
+
+    
+    
+    truncate table "ingestion"."main"."cbs_repayments_contract";
+    -- dbt seed --
+    
+          COPY "ingestion"."main"."cbs_repayments_contract" FROM '/Users/benjaminsinzore/de-exercise-submission/seeds/cbs_repayments_contract.csv' (FORMAT CSV, HEADER TRUE, DELIMITER ',')
+        
+
+;
+  

@@ -1,0 +1,7 @@
+duckdb_ingestion:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "target/ingestion.duckdb"
+      threads: 4

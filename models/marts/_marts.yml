@@ -1,0 +1,175 @@
+version: 2
+
+models:
+  
+  - name: fct_loan
+    config:
+      tags: ['publication_critical']
+    description: >
+      One row per loan. Carries the enterprise client identifier from the A2
+      crosswalk, the loan's country, principal in local currency, principal
+      in USD, and the enterprise client's is_minor_restricted flag.
+
+      Exchange rate: cbs_loans.cbs_fx_rate normalized to units-per-USD
+      (invert if < 1). If cbs_fx_rate is missing, fall back to the most
+      recent official fx_rates row on or before disbursed_at. The parallel
+      rate type is excluded because it is not the rate the CBS uses for
+      reporting.
+    tests:
+      - no_excluded_columns:
+          excluded:
+            - 'fingerprint_template_ref'
+            - 'id_number'
+            - 'id_document_number'
+            - 'phone_1'
+            - 'phone_2'
+            - 'mobile_no'
+            - 'first_name'
+            - 'last_name'
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              principal_usd_cbs IS NULL
+              OR principal_usd IS NULL
+              OR ABS(principal_usd - principal_usd_cbs) <= 5.00
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "borrower_id IS NOT NULL"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "principal_local IS NULL OR principal_local > 0"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              (fx_rate_source = 'no_rate' AND principal_usd IS NULL)
+              OR (fx_rate_source != 'no_rate' AND principal_usd IS NOT NULL)
+    columns:
+      - name: loan_id
+        tests: [not_null, unique]
+      - name: enterprise_client_id
+        tests: [not_null]
+      - name: is_minor_restricted
+        tests: [not_null]
+      - name: country
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['KE','ET','RW','SS','TD']
+      - name: currency
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['KES','ETB','RWF','SSP','XAF']
+      - name: fx_rate_source
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['cbs_fx_rate', 'fx_rates_official_on_or_before', 'no_rate']
+      - name: cbs_rate_convention
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['units_per_usd', 'usd_per_unit']
+              config:
+                where: "cbs_rate_convention is not null"
+
+  
+  - name: donor_lending_summary
+    config:
+      tags: ['publication_critical']
+    description: >
+      Country-month-currency lending summary for donor disclosure. Carries
+      country, region, month, currency, loan and repayment counts, and
+      amounts in local currency and USD. Cells with fewer than 5 underlying
+      records are blanked (NULL) and flagged with is_suppressed = TRUE.
+
+      No person-level attributes are present. Rows where the enterprise
+      client is flagged as a minor are excluded.
+    tests:
+      - no_excluded_columns:
+          excluded:
+            - 'borrower_id'
+            - 'loan_id'
+            - 'enterprise_client_id'
+            - 'loan_officer'
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              (loans_disbursed_count IS NULL OR loans_disbursed_count >= 5)
+              AND (repayments_count IS NULL OR repayments_count >= 5)
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - country
+              - month
+              - currency
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              loans_disbursed_count IS NOT NULL
+              OR repayments_count IS NOT NULL
+    columns:
+      - name: country
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['KE','ET','RW','SS','TD']
+      - name: donor_region
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['East Africa', 'Central Africa', 'Sahel', 'Other']
+      - name: month
+        tests: [not_null]
+      - name: currency
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['KES','ETB','RWF','SSP','XAF']
+      - name: is_suppressed
+        tests: [not_null]
+
+
+  - name: fct_loan_repayment_reconciliation
+    config:
+      tags: ['publication_critical']
+    description: >
+      Country-month-currency reconciliation between the pipeline's loan and
+      repayment totals and the CBS control totals. Part of the DQ4 publish
+      gate: if this model contains failing rows, do not run the publication
+      step.
+    columns:
+      - name: country
+        tests: [not_null]
+      - name: month
+        tests: [not_null]
+      - name: currency
+        tests: [not_null]
+      - name: row_pass
+        tests: [not_null]
+      - name: coverage
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['present', 'missing_in_control', 'missing_in_detail']
+
+  # ---------- A2: dim_enterprise_client ----------
+  - name: dim_enterprise_client
+    config:
+      tags: ['publication_critical']
+    description: >
+      One row per enterprise client. Assigns a stable enterprise_client_id to
+      every CBS borrower and links IMS clients where the A2 crosswalk is
+      confident. Part of the DQ4 publish gate.
+    columns:
+      - name: enterprise_client_id
+        tests: [unique, not_null]
+      - name: is_minor_restricted
+        tests: [not_null]

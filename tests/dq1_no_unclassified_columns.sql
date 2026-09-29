@@ -1,0 +1,1 @@
+select * from {{ ref('dq1_arrival_check') }}

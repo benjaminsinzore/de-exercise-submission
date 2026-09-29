@@ -1,0 +1,22 @@
+
+    
+    
+
+with all_values as (
+
+    select
+        currency as value_field,
+        count(*) as n_records
+
+    from "ingestion"."main_marts"."fct_loan"
+    group by currency
+
+)
+
+select *
+from all_values
+where value_field not in (
+    'KES','ETB','RWF','SSP','XAF'
+)
+
+

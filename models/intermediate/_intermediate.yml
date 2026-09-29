@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: int_client_identity_prepped
+    columns:
+      - name: ims_client_id
+        tests:
+          - unique:
+              config:
+                where: "source_system = 'ims'"
+      - name: borrower_id
+        tests:
+          - unique:
+              config:
+                where: "source_system = 'cbs'"
+
+  - name: int_client_identity_auto_matches
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - ims_client_id
+              - borrower_id
+
+  - name: int_client_identity_review
+    columns:
+      - name: review_reason
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - 'minor_requires_exact_id'
+                - 'ambiguous_ims'
+                - 'ambiguous_borrower'
+                - 'medium_confidence'
+                - 'high_confidence_but_not_auto'
+                - 'duplicate_ims_client_id'
+                - 'low_confidence'
+
+  - name: int_loan_repayment_reconciliation
+    columns:
+      - name: coverage
+        tests:
+          - accepted_values:
+              values: ['present', 'missing_in_control', 'missing_in_detail']

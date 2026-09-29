@@ -1,0 +1,28 @@
+name: ingestion
+version: "1.0"
+profile: duckdb_ingestion
+
+model-paths: ["models"]
+
+vars:
+  source_dir: "source"
+  minor_handling: "tag"
+
+models:
+  ingestion:
+    raw:
+      +materialized: table
+      +schema: raw
+
+      raw_cbs_repayments:
+        +materialized: incremental
+        +unique_key: txn_id
+        +incremental_strategy: delete+insert
+
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+
+    marts:
+      +materialized: table
+      +schema: marts

@@ -1,0 +1,1 @@
+select * from "ingestion"."main"."dq1_arrival_check"

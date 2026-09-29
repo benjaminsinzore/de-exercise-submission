@@ -1,0 +1,16 @@
+file_name,column_name,declared_type,requirement,canonical_name,contract_version
+cbs_repayments_day1.csv,txn_id,VARCHAR,required,txn_id,1
+cbs_repayments_day1.csv,loan_id,BIGINT,required,loan_id,1
+cbs_repayments_day1.csv,paid_at,TIMESTAMP WITH TIME ZONE,required,paid_at,1
+cbs_repayments_day1.csv,amount,VARCHAR,required,amount_paid,1
+cbs_repayments_day1.csv,currency,VARCHAR,required,currency,1
+cbs_repayments_day1.csv,channel,VARCHAR,required,channel,1
+cbs_repayments_day1.csv,reversal_of,VARCHAR,required,reversal_of,1
+cbs_repayments_day2.csv,txn_id,VARCHAR,required,txn_id,1
+cbs_repayments_day2.csv,loan_id,BIGINT,required,loan_id,1
+cbs_repayments_day2.csv,paid_at,TIMESTAMP WITH TIME ZONE,required,paid_at,1
+cbs_repayments_day2.csv,amount_paid,DOUBLE,required,amount_paid,1
+cbs_repayments_day2.csv,currency,VARCHAR,required,currency,1
+cbs_repayments_day2.csv,channel,VARCHAR,required,channel,1
+cbs_repayments_day2.csv,agent_code,VARCHAR,required,agent_code,1
+cbs_repayments_day2.csv,reversal_of,VARCHAR,required,reversal_of,1

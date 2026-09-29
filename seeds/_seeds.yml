@@ -1,0 +1,79 @@
+version: 2
+
+seeds:
+
+
+  - name: column_classification
+    description: >
+      Mirror of classification.yaml as a seed. Every source column must
+      appear here with a classification. DQ1 enforces this.
+    config:
+      quote_columns: false
+    columns:
+      - name: source_file
+        tests: [not_null]
+      - name: column_name
+        tests: [not_null]
+      - name: classification
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['public', 'internal', 'personal', 'sensitive', 'restricted', 'excluded']
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - source_file
+              - column_name
+
+
+  - name: cbs_repayments_contract
+    description: >
+      Declared shape of the cbs_repayments_*.csv source files. One row per
+      (file_name, column_name). This seed is the single source of truth for
+      the expected header of each repayment extract. Changes require a
+      version bump and a changelog entry in contracts/cbs_repayments.md.
+    config:
+      quote_columns: false
+      column_types:
+        file_name: VARCHAR
+        column_name: VARCHAR
+        declared_type: VARCHAR
+        requirement: VARCHAR
+        canonical_name: VARCHAR
+        contract_version: INTEGER
+    columns:
+      - name: file_name
+        tests: [not_null]
+      - name: column_name
+        tests: [not_null]
+      - name: declared_type
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - 'VARCHAR'
+                  - 'DOUBLE'
+                  - 'BIGINT'
+                  - 'INTEGER'
+                  - 'BOOLEAN'
+                  - 'TIMESTAMP'
+                  - 'TIMESTAMP WITH TIME ZONE'
+      - name: requirement
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['required', 'optional']
+      - name: canonical_name
+        tests: [not_null]
+      - name: contract_version
+        tests: [not_null]
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - file_name
+              - column_name

@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: raw_cbs_borrowers
+    tests:
+      - no_excluded_columns:
+          excluded: ['fingerprint_template_ref']
+    columns:
+      - name: borrower_id
+        tests: [not_null, unique]
+
+  - name: raw_cbs_loans
+    columns:
+      - name: loan_id
+        tests: [not_null]
+      - name: borrower_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('raw_cbs_borrowers')
+                field: borrower_id
+      - name: currency
+        tests: [not_null]
+
+  - name: raw_cbs_repayments
+    columns:
+      - name: txn_id
+        tests: [not_null, unique]
+      - name: loan_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('raw_cbs_loans')
+                field: loan_id
+
+  - name: raw_fx_rates
+    columns:
+      - name: currency
+        tests: [not_null]
+      - name: rate_date
+        tests: [not_null]
+        
+
+  - name: raw_ims_clients
+    columns:
+      - name: ims_client_id
+        tests: [not_null]

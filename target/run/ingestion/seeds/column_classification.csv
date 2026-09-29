@@ -1,0 +1,11 @@
+
+    
+    
+    truncate table "ingestion"."main"."column_classification";
+    -- dbt seed --
+    
+          COPY "ingestion"."main"."column_classification" FROM '/Users/benjaminsinzore/de-exercise-submission/seeds/column_classification.csv' (FORMAT CSV, HEADER TRUE, DELIMITER ',')
+        
+
+;
+  
